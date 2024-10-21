@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S3 File Manager</title>
+<style>
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+margin: 0;
+padding: 0;
+background-color: #f5f5f5;
+color: #333;
+}
+h1, h2 {
+color: #2c3e50;
+margin-bottom: 20px;
+text-align: center;
+}
+h1 {
+font-size: 36px;
+}
+h2 {font-size: 24px;
+}
+.container {
+max-width: 800px;margin: 50px auto;padding: 20px;background-color: white;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);border-radius: 10px;
+}
+form {
+margin: 20px 0;display: flex;
+justify-content: center;
+}
+input[type="text"], input[type="file"] 
+{
+padding: 10px;border: 2px solid #ccc;
+border-radius: 5px;font-size: 16px;width: 70%;
+}
+button {
+background-color: #3498db;
+color: white;
+padding: 10px 20px;border: none; border-radius: 5px;
+font-size: 16px;cursor: pointer;
+transition: background-color 0.3s ease;
+margin-left: 10px;
+}
+button:hover {
+background-color: #2980b9;
+}
+ul {
+list-style-type: none;
+padding: 0;
+}
+li {
+background-color: #ecf0f1;padding: 15px;margin-bottom: 10px;
+border-radius: 5px;display: flex;
+justify-content: space-between;align-items: center;
+}
+li a {
+text-decoration: none;
+color: #3498db;
+font-weight: bold;
+}
+li a:hover {
+text-decoration: underline;
+}
+form.inline-form {
+display: inline;
+}
+.inline-form button {
+background-color: #e74c3c;
+margin-left: 5px;
+}
+.inline-form button:hover {background-color: #c0392b;
+}
+.actions {
+display: flex;gap: 10px;
+}
+input[type="text"] {
+flex: 1;
+}
+@media (max-width: 600px) {
+.container {
+padding: 10px;
+}
+form {
+flex-direction: column;
+}
+button {
+margin-left: 0;margin-top: 10px;
+}
+li {
+flex-direction: column;
+}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1><b>AWS S3_File_ Manager</b></h1>
+<h2>Create Bucket</h2>
+<form action="/create_bucket" method="post">
+<input type="text" name="bucket_name" required placeholder="Bucket Name">
+<button type="submit">Create</button>
+</form>
+<h2>Buckets</h2>
+<ul>
+{% for bucket in buckets %}
+<li><a href="{{ url_for('list_bucket', bucket_name=bucket['Name']) }}">{{ bucket['Name'] }}</a>
+<form action="/delete_bucket/{{ bucket['Name'] }}" method="post" class="inline-form">
+<button type="submit">Delete</button></form></li>
+{% endfor %}
+</ul>
+{% if bucket_name %}
+<h2>Contents of {{ bucket_name }}</h2>
+<form action="/create_folder/{{ bucket_name }}" method="post">
+<input type="text" name="folder_name" required placeholder="Folder Name">
+<button type="submit">Create Folder</button>
+</form>
+<form action="/upload/{{ bucket_name }}" method="post" enctype="multipart/form-data">
+<input type="file" name="file" required>
+<button type="submit">Upload  </button>
+</form><ul>
+{% for item in contents %}
+<li>
+{{ item['Key'] }}
+<div class="actions">
+{% if item['Key'].endswith('/') %}
+<form action="{{ url_for('delete_folder', bucket_name=bucket_name, folder_key=item.Key |
+urlencode) }}" method="post" class="inline-form">
+<button type="submit">Delete</button>
+</form>
+{% else %}
+<form action="/delete_file/{{ bucket_name }}/{{ item['Key'] }}" method="post" class="inline-
+form">
+<button type="submit">Delete</button></form>
+<form action="/copy_file/{{ bucket_name }}/{{ item['Key'] }}" method="post" class="inline-
+form"><input type="text" name="destination_bucket" required placeholder="Destination Bucket">
+<button type="submit">Copy</button></form>
+<form action="/move_file/{{ bucket_name }}/{{ item['Key'] }}" method="post" class="inline-
+form">
+<input type="text" name="destination_bucket" required placeholder="Destination Bucket">
+<button type="submit">Move</button></form>
+{% endif %}
+</div></li>
+{% endfor %}
+</ul>{% endif %}
+</div></body></html>
